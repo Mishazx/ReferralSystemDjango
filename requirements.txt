@@ -1,0 +1,5 @@
+Django
+djangorestframework
+drf-yasg
+python-dotenv
+psycopg2-binary
