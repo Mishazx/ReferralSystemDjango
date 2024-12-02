@@ -3,12 +3,24 @@ from time import sleep
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 from .models import User, VerificationCode
 from .serializers import UserSerializer, VerificationCodeSerializer
 
 
 class PhoneAuthView(APIView):
+    @swagger_auto_schema(
+        operation_description="Authenticate user by phone number",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'phone_number': openapi.Schema(type=openapi.TYPE_STRING, description='User phone number')
+            }
+        ),
+        responses={200: openapi.Response('Code sent', VerificationCodeSerializer)}
+    )
     def post(self, request):
         phone_number = request.data.get('phone_number')
         if not phone_number:
@@ -24,6 +36,17 @@ class PhoneAuthView(APIView):
 
 
 class VerifyCodeView(APIView):
+    @swagger_auto_schema(
+        operation_description="Verify user by code",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'phone_number': openapi.Schema(type=openapi.TYPE_STRING, description='User phone number'),
+                'code': openapi.Schema(type=openapi.TYPE_STRING, description='Verification code')
+            }
+        ),
+        responses={200: 'Verification successful'}
+    )
     def post(self, request):
         phone_number = request.data.get('phone_number')
         code = request.data.get('code')
@@ -43,6 +66,17 @@ class VerifyCodeView(APIView):
 
 
 class UserProfileView(APIView):
+    """
+    Retrieve or update a user's profile.
+    """
+
+    @swagger_auto_schema(
+        operation_description="Get user profile by phone number",
+        responses={200: UserSerializer},
+        manual_parameters=[
+            openapi.Parameter('phone_number', openapi.IN_QUERY, description="Phone number of the user", type=openapi.TYPE_STRING)
+        ]
+    )
     def get(self, request):
         phone_number = request.data.get('phone_number')
         user = User.objects.filter(phone_number=phone_number).first()
@@ -52,6 +86,19 @@ class UserProfileView(APIView):
         serializer = UserSerializer(user)
         return Response(serializer.data)
 
+
+class ActivateInviteView(APIView):
+    @swagger_auto_schema(
+        operation_description="Activate invite code for user",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'phone_number': openapi.Schema(type=openapi.TYPE_STRING, description='User phone number'),
+                'invite_code': openapi.Schema(type=openapi.TYPE_STRING, description='Invite code to activate')
+            }
+        ),
+        responses={200: 'Invite code activated'}
+    )
     def post(self, request):
         phone_number = request.data.get('phone_number')
         invite_code = request.data.get('invite_code')
