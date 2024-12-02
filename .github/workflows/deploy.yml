@@ -13,22 +13,18 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Install SSH Client
-      run: |
-        apt-get update
-        apt-get install -y openssh-client
-
     - name: Set up SSH
       uses: webfactory/ssh-agent@v0.5.3
       with:
         ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
     - name: Deploy to Server
-      env:
-        HOST: 103.231.73.155
-        USER: root
-        PATH: /root/app/referral
-      run: |
-        ssh $USER@$HOST 'mkdir -p $PATH'
-        rsync -avz --exclude='.git' ./ $USER@$HOST:$PATH
-        ssh $USER@$HOST 'cd $PATH && docker-compose down && docker-compose up -d'
+      uses: appleboy/ssh-action@v0.1.2
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          mkdir -p /root/app/referral
+          rsync -avz --exclude='.git' ./ /root/app/referral
+          cd /root/app/referral && docker-compose down && docker-compose up -d
