@@ -15,6 +15,7 @@ class User(models.Model):
             self.invite_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
         super().save(*args, **kwargs)
 
+
 class VerificationCode(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='verification_codes')
     code = models.CharField(max_length=4)
@@ -23,12 +24,6 @@ class VerificationCode(models.Model):
     is_used = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
-        if not self.expires_at:
-            self.expires_at = now() + timedelta(minutes=5)
-        super().save(*args, **kwargs)
-
-    def save(self, *args, **kwargs):
-        from django.utils import timezone
         if not self.expires_at:
             self.expires_at = timezone.now() + timezone.timedelta(minutes=5)
         super().save(*args, **kwargs)
